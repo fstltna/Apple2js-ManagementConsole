@@ -1,0 +1,451 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use UI::Dialog;
+use Term::ReadKey;
+use Term::ANSIScreen qw(cls);
+
+my $FileEditor = "/bin/nano";
+my $InitDName = "/home/apple2/bin/apple2js";
+my $APPLE2JSDIR = "/home/apple2/apple2js";
+my $BackupCommand = "/home/apple2/Apple2js-Backup/apple2jsbackup.pl -snapshot";
+my $Apple2jsLog = "/home/apple2/Apple2js.log";
+my $Pager = "/usr/bin/less";
+my $AMCDir = "/home/apple2/Apple2js-ManagementConsole";
+my $BackupToolDir = "/home/apple2/Apple2js-Backup";
+my $StartupDir = "/home/apple2/Apple2js-Startup";
+my $UpdateCommand = "/usr/bin/git pull";
+my $BinDir = "/home/apple2/bin";
+my $DEBUG_MODE = "off";
+my $TEXTDIR = "$APPLE2JSDIR/resources/text";
+my $FAKEDBOLDDIR = "$APPLE2JSDIR/oldcm/resources/fakedb";
+my $FAKEDBNEWDIR = "$APPLE2JSDIR/resources/fakedb";
+my $UpdateStepsFile = "$AMCDir/UpdateSteps.txt";
+my $MigrateFakeDB = "$AMCDir/mudUpdate.sh";
+
+###################################################
+# No changes below here
+###################################################
+
+my $AMC_ver = "1.0.0";
+my $Record = "false";	# Are results saved?
+my $TempDir = "/tmp";
+my $RobotName = "";
+my $BotVersion = "";
+my $UserName = "";
+my $ServerStatus = "foo";
+
+sub PrintDebugCommand
+{
+	if ($DEBUG_MODE eq "off")
+	{
+		return;
+	}
+	my $PassedString = shift;
+	print "About to run:\n$PassedString\n";
+	print "Press Enter To Run This:";
+	my $entered = <STDIN>;
+}
+
+my $d = new UI::Dialog ( backtitle => "Apple2js Management Console v$AMC_ver", height => 20, width => 65, listheight => 5,
+	order => [ 'ascii', 'cdialog', 'xdialog' ]);
+
+my $windowtitle = "Welcome to the Apple2js Management Console!";
+my $enjoyedtitle = "We hope you enjoyed AMC!";
+my $introtext =
+"This is the Apple2js Management Console, a utility for Apple2js operators
+to manage their servers from a text UI rather than the command line.";
+
+$d->msgbox( title => $windowtitle, text => $introtext );
+
+if (($d->state() eq "ESC") || ($d->state() eq "CANCEL"))
+{
+	exit 0;
+}
+
+my $menuselection = "";
+
+sub CheckServerStatus
+{
+	my $running=`ps ax|grep "npm start"|grep -v grep`;
+
+	if ($running ne "")
+	{
+		$ServerStatus = "Running";
+	}
+	else
+	{
+		$ServerStatus = "Stopped";
+	}
+
+}
+
+sub DoUpdate
+{
+	my $DesiredDir = $_[0];
+
+	# Update desired utility
+	chdir ($DesiredDir);
+	PrintDebugCommand("Running $UpdateCommand in $DesiredDir\n");
+	system("$UpdateCommand");
+	print "Press Enter To Continue";
+	my $entered = <STDIN>;
+}
+
+sub EditTextMenu
+{
+	my $WantRespawn="ON";
+	CheckServerStatus();
+	if (-f "$APPLE2JSDIR/nostart")
+	{
+		$WantRespawn="OFF";
+	}
+	$menuselection = $d->menu( title => "Edit Text Files Menu", text => "Server is $ServerStatus and respawn is $WantRespawn - Select one:",
+                            list => [ '1', 'Blocked',
+                                      '2', 'Classes',
+                                      '3', 'Conblocked',
+                                      '4', 'Credits',
+                                      '5', 'DoneAcct.',
+                                      '6', 'Down',
+                                      '7', 'Email',
+                                      '8', 'Inclination',
+                                      '9', 'Newacct',
+                                      '10', 'NewCharDone',
+                                      '11', 'NewChar',
+                                      '12', 'NoLogins',
+                                      '13', 'Offline',
+                                      '14', 'Races',
+                                      '15', 'Rules',
+                                      '16', 'SelChar',
+                                      '17', 'Stats',
+                                      '18', 'Themes',
+                                      'q', 'Main Menu' ] );
+}
+
+sub EditText
+{
+	while (-1)
+	{
+		EditTextMenu();
+		if (($menuselection eq "CANCEL") || ($menuselection eq "ESC") || ($menuselection eq "") || ($menuselection eq "q") || ($menuselection eq "Q"))
+		{
+			return;
+		}
+		elsif ($menuselection eq "1")
+		{
+			# Edit blocked.txt file
+			system("$FileEditor $TEXTDIR/blocked.txt");
+		}
+		elsif ($menuselection eq "2")
+		{
+			# Edit classes.txt file
+			system("$FileEditor $TEXTDIR/classes.txt");
+		}
+		elsif ($menuselection eq "3")
+		{
+			# Edit conblocked.txt file
+			system("$FileEditor $TEXTDIR/conblocked.txt");
+		}
+		elsif ($menuselection eq "4")
+		{
+			# Edit conblocked.txt file
+			system("$FileEditor $TEXTDIR/credits.txt");
+		}
+		elsif ($menuselection eq "5")
+		{
+			# Edit doneacct.txt file
+			system("$FileEditor $TEXTDIR/doneacct.txt");
+		}
+		elsif ($menuselection eq "6")
+		{
+			# Edit down.txt file
+			system("$FileEditor $TEXTDIR/down.txt");
+		}
+		elsif ($menuselection eq "7")
+		{
+			# Edit email.txt file
+			system("$FileEditor $TEXTDIR/email.txt");
+		}
+		elsif ($menuselection eq "8")
+		{
+			# Edit inclination.txt file
+			system("$FileEditor $TEXTDIR/inclination.txt");
+		}
+		elsif ($menuselection eq "9")
+		{
+			# Edit newacct.txt file
+			system("$FileEditor $TEXTDIR/newacct.txt");
+		}
+		elsif ($menuselection eq "10")
+		{
+			# Edit newchardone.txt file
+			system("$FileEditor $TEXTDIR/newchardone.txt");
+		}
+		elsif ($menuselection eq "11")
+		{
+			# Edit newchar.txt file
+			system("$FileEditor $TEXTDIR/newchar.txt");
+		}
+		elsif ($menuselection eq "12")
+		{
+			# Edit nologins.txt file
+			system("$FileEditor $TEXTDIR/nologins.txt");
+		}
+		elsif ($menuselection eq "13")
+		{
+			# Edit offline.txt file
+			system("$FileEditor $TEXTDIR/offline.txt");
+		}
+		elsif ($menuselection eq "14")
+		{
+			# Edit races.txt file
+			system("$FileEditor $TEXTDIR/races.txt");
+		}
+		elsif ($menuselection eq "15")
+		{
+			# Edit rules.txt file
+			system("$FileEditor $TEXTDIR/rules.txt");
+		}
+		elsif ($menuselection eq "16")
+		{
+			# Edit selchar.txt file
+			system("$FileEditor $TEXTDIR/selchar.txt");
+		}
+		elsif ($menuselection eq "17")
+		{
+			# Edit stats.txt file
+			system("$FileEditor $TEXTDIR/stats.txt");
+		}
+		elsif ($menuselection eq "18")
+		{
+			# Edit themes.txt file
+			system("$FileEditor $TEXTDIR/themes.txt");
+		}
+	}
+}
+
+sub UpdateToolsMenu
+{
+	my $WantRespawn="ON";
+	CheckServerStatus();
+	if (-f "$APPLE2JSDIR/nostart")
+	{
+		$WantRespawn="OFF";
+	}
+	$menuselection = $d->menu( title => "Update Utilities Menu", text => "Server is $ServerStatus and respawn is $WantRespawn - Select one:",
+                            list => [ '1', 'Update AMC',
+                                      '2', 'Update Backup',
+                                      '3', 'Update Startup',
+                                      'q', 'Main Menu' ] );
+}
+
+sub UpdateTools
+{
+	while (-1)
+	{
+		UpdateToolsMenu();
+		if (($menuselection eq "CANCEL") || ($menuselection eq "ESC") || ($menuselection eq "") || ($menuselection eq "q") || ($menuselection eq "Q"))
+		{
+			return;
+		}
+		elsif ($menuselection eq "1")
+		{
+			# Update AMC
+			DoUpdate($AMCDir);
+		}
+		elsif ($menuselection eq "2")
+		{
+			# Update BackupToolDir
+			DoUpdate($BackupToolDir);
+		}
+		elsif ($menuselection eq "3")
+		{
+			# Update Startup
+			DoUpdate($StartupDir);
+			if (! -d $BinDir)
+			{
+				print "Binary dir $BinDir not found, creating...\n";
+				system("mkdir -p $BinDir");
+			}
+			system("cp $StartupDir/apple2js $BinDir");
+			system("cp $StartupDir/startapple2js $APPLE2JSDIR");
+		}
+	}
+}
+
+sub ProcesKillMenu
+{
+        my $WantRespawn="ON";
+        CheckServerStatus();
+        if (-f "$APPLE2JSDIR/nostart")
+        {
+                $WantRespawn="OFF";
+        }
+
+        $menuselection = $d->menu( title => "Process Kill Menu", text => "Server is $ServerStatus and respawn is $WantRespawn - Select one:",
+                            list => [ '1', 'Request Clean',
+                                      '2', 'Force Kill',
+                                      'q', 'Main Menu' ] );
+}
+
+sub ProcessKill
+{
+        while (-1)
+        {
+		CheckServerStatus();
+                ProcesKillMenu();
+                if (($menuselection eq "CANCEL") || ($menuselection eq "ESC") || ($menuselection eq "") || ($menuselection eq "q") || ($menuselection eq "Q"))
+                {
+                        return;
+                }
+                elsif ($menuselection eq "1")
+                {
+			if ($ServerStatus eq "Running")
+			{
+				# Reset the server process
+				print "Killing apple2js process, please wait...";
+				system("killall npm");
+				sleep(10);
+			}
+			else
+			{
+				print "Process not running...";
+				sleep(3)
+			}
+
+                }
+                elsif ($menuselection eq "2")
+                {
+                        # Force-kill server process
+                        if ($d->yesno( text => "Confirm force-killing apple2js process", text => "Are you *SURE* you want to force kill the Server process?\nYou should first try the \#1 option and see if that works" ))
+                        {
+				if ($ServerStatus eq "Running")
+				{
+					print "Force-killing apple2js process, please wait for 5 seconds...";
+					system("killall -s9 npm");
+					sleep(5);
+				}
+				else
+				{
+					print "Process not running...";
+					sleep(3)
+				}
+                        }
+                }
+        }
+}
+
+sub MainMenu
+{
+	my $WantRespawn="ON";
+	CheckServerStatus();
+	if (-f "$APPLE2JSDIR/nostart")
+	{
+		$WantRespawn="OFF";
+	}
+
+	$menuselection = $d->menu( title => "Main Menu", text => "Server is $ServerStatus and respawn is $WantRespawn - Select one:",
+                            list => [ '1', 'Start Watchdog',
+                                      '2', 'Stop Watchdog',
+                                      '3', 'Server Console',
+                                      '4', 'Turn Respawn Off',
+                                      '5', 'Turn Respawn On',
+                                      '6', 'Edit mudUNIX.sh',
+                                      '7', 'Edit coffeemud.ini',
+                                      '8', 'Run Backup',
+                                      '9', 'View Log',
+                                      '10', 'Kill Server Process',
+                                      '11', 'Edit intro.txt',
+                                      '12', 'Update Utils',
+                                      '15', 'Edit Texts',
+                                      'q', 'Quit AMC' ] );
+}
+
+while (-1)
+{
+	MainMenu();
+	if (($menuselection eq "CANCEL") || ($menuselection eq "ESC") || ($menuselection eq "") || ($menuselection eq "q") || ($menuselection eq "Q"))
+	{
+		$d->msgbox( title => $enjoyedtitle, text => "Thanks for using AMC..." );
+		exit 0;
+	}
+	if ($menuselection eq "1")
+	{
+                if ($d->yesno( text => "Confirm starting the server watchdog", text => "Are you sure you want to start the server watchdog? You should likely use option #10 instead..." ))
+                {
+                        system("$InitDName start");
+                        sleep(10);
+                }
+	}
+	elsif ($menuselection eq "2")
+	{
+		if ($d->yesno( text => "Confirm stopping the server watchdog", text => "Are you sure you want to shut down the server watchdog?" ))
+		{
+			system("$InitDName stop");
+			sleep(5);
+		}
+	}
+	elsif ($menuselection eq "3")
+	{
+		$d->msgbox( text => "To exit the Apple2js console and return to AMC press CTRL-A CTRL-D" );
+		system("screen -r Apple2js");
+	}
+	elsif ($menuselection eq "4")
+	{
+		# Turn off respawn
+		system("touch $APPLE2JSDIR/nostart");
+	}
+	elsif ($menuselection eq "5")
+	{
+		# Turn respawn back on
+		if (-f "$APPLE2JSDIR/nostart")
+		{
+			unlink("$APPLE2JSDIR/nostart");
+		}
+	}
+	elsif ($menuselection eq "6")
+	{
+		# Edit mudUNIX.sh file
+		system("$FileEditor $APPLE2JSDIR/mudUNIX.sh");
+	}
+	elsif ($menuselection eq "7")
+	{
+		# Edit coffeemud.ini file
+		system("$FileEditor $APPLE2JSDIR/coffeemud.ini");
+	}
+	elsif ($menuselection eq "8")
+	{
+                # Run a backup
+                system("clear");
+                system("$BackupCommand");
+                print "Press Enter To Continue";
+                my $entered = <STDIN>;
+	}
+	elsif ($menuselection eq "9")
+	{
+                # View the log file
+                system("$Pager $Apple2jsLog");
+	}
+	elsif ($menuselection eq "10")
+	{
+		ProcessKill();
+	}
+	elsif ($menuselection eq "11")
+	{
+		# Edit intro.txt file
+		system("$FileEditor $TEXTDIR/intro.txt");
+	}
+	elsif ($menuselection eq "12")
+	{
+		# Update Menu
+		UpdateTools();
+	}
+	elsif ($menuselection eq "15")
+	{
+		# Text File Menu
+		EditText();
+	}
+}
+
+exit 0;
