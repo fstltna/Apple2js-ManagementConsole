@@ -19,10 +19,6 @@ my $UpdateCommand = "/usr/bin/git pull";
 my $BinDir = "/home/apple2/bin";
 my $DEBUG_MODE = "off";
 my $TEXTDIR = "$APPLE2JSDIR/resources/text";
-my $FAKEDBOLDDIR = "$APPLE2JSDIR/oldcm/resources/fakedb";
-my $FAKEDBNEWDIR = "$APPLE2JSDIR/resources/fakedb";
-my $UpdateStepsFile = "$AMCDir/UpdateSteps.txt";
-my $MigrateFakeDB = "$AMCDir/mudUpdate.sh";
 
 ###################################################
 # No changes below here
