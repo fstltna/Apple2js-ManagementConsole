@@ -3,8 +3,6 @@ Allows you to manage your Apple2js server with a text based UI -
 Official support sites: [Official Github Repo](https://github.com/fstltna/Apple2js-ManagementConsole.git) - [Official Forum](https://appleii.retro-os.live/index.php/downloads/category/23-our-server-tools)
 
 
-![Coffee MUD Sample Screen](https://pocketmud.com/coffee_mud.png) 
-
 ---
 
 Edit "amc" and change the settings at the top if your Apple2js server is not in /home/apple2/apple2js
